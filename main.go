@@ -22,25 +22,65 @@ import (
 	"strings"
 )
 
-var encryptionAlgorithm string
-var keyDerivationFunction string
-var encryptionKeySalt string
-var encryptionKey string
-var plainText string
+var commands = map[string]func([]string){
+	"encrypt": encrypt,
+}
+
 var verbose bool
+var help bool
+var errorLog = log.New(os.Stderr, "[enka] ", 0)
+var outLog = log.New(os.Stdout, "[enka] ", 0)
 
 func main() {
-	flag.StringVar(&encryptionAlgorithm, "algo", "aes256cbc", "The encryption algorithm to use")
-	flag.StringVar(&keyDerivationFunction, "kdf", "pbkdf2:650000:sha256", "The KDF to use")
-	flag.StringVar(&encryptionKey, "key", "", "The encryption key")
-	flag.StringVar(&encryptionKeySalt, "salt", "", "A salt for the KDF")
-	flag.StringVar(&plainText, "text", "", "The string to encrypt")
 	flag.BoolVar(&verbose, "verbose", false, "Verbosity level")
-
+	flag.BoolVar(&help, "help", false, "Show the global help")
 	flag.Parse()
 
-	errorLog := log.New(os.Stderr, "[enka-encrypt] ", 0)
-	outLog := log.New(os.Stdout, "[enka-encrypt] ", 0)
+	if len(flag.Args()) == 0 {
+		globalUsage(os.Args[0])
+		globalHelp()
+		os.Exit(1)
+	}
+
+	command, ok := commands[flag.Args()[0]]
+	if !ok {
+		globalUsage(os.Args[0])
+		os.Exit(1)
+	}
+
+	if verbose {
+		outLog.Println("Verbosity on")
+	}
+
+	command(flag.Args()[1:])
+}
+
+func globalUsage(executable string) {
+	fmt.Printf("Usage: %s [ --verbose ] encrypt [ --algo ] [ --kdf ] [ --key ] [ --salt ] [ --text ]\n", executable)
+}
+
+func globalHelp() {
+	fmt.Println("Help:")
+	fmt.Println("  encrypt      The encryption module")
+}
+
+func encrypt(args []string) {
+	var encryptionAlgorithm string
+	var keyDerivationFunction string
+	var encryptionKeySalt string
+	var encryptionKey string
+	var plainText string
+
+	fs := flag.NewFlagSet("encrypt", flag.ExitOnError)
+	fs.StringVar(&encryptionAlgorithm, "algo", "aes256cbc", "The encryption algorithm to use")
+	fs.StringVar(&keyDerivationFunction, "kdf", "pbkdf2:650000:sha256", "The KDF to use")
+	fs.StringVar(&encryptionKey, "key", "", "The encryption key")
+	fs.StringVar(&encryptionKeySalt, "salt", "", "A salt for the KDF")
+	fs.StringVar(&plainText, "text", "", "The string to encrypt")
+	err := fs.Parse(args)
+	if err != nil {
+		return
+	}
 
 	if !isSupportedAlgo(encryptionAlgorithm) {
 		errorLog.Fatalln(fmt.Sprintf("The specified algorithm \"%s\" is not supported", encryptionAlgorithm))
@@ -119,7 +159,7 @@ func main() {
 		mode.CryptBlocks(cipherBytes, plainBytes)
 	}
 
-	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initalizationVector), base64.StdEncoding.EncodeToString(cipherBytes))
+	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s\n", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initalizationVector), base64.StdEncoding.EncodeToString(cipherBytes))
 
 	// echo $(echo "abcd" | openssl enc -aes-256-cbc -k 1234 -pbkdf2 -e -base64 -A -S 0000000000000000 -iter 4096 -md sha1 -p -iv 00000000000000000000000000000000)
 	// echo $(echo "a48yuBSSLSIXLKtxO0eAj5mujzIpgG4TcKc21Qtnwws=" | openssl enc -aes-256-cbc -k 1234 -pbkdf2 -d -base64 -A -salt -iter 4096 )
