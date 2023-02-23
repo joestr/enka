@@ -1,7 +1,6 @@
 package enka_encryption
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,7 +9,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
+	"enka/pkcs7"
 	"flag"
 	"fmt"
 	"golang.org/x/crypto/pbkdf2"
@@ -101,7 +100,7 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 		}
 
 		plainBytes = []byte(plainText)
-		plainBytes, _ = pkcs7pad(plainBytes, aes.BlockSize)
+		plainBytes, _ = pkcs7.Pkcs7pad(plainBytes, aes.BlockSize)
 
 		cipherBytes = make([]byte, len(plainBytes))
 
@@ -119,39 +118,6 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	}
 
 	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s\n", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initalizationVector), base64.StdEncoding.EncodeToString(cipherBytes))
-
-	// echo $(echo "abcd" | openssl enc -aes-256-cbc -k 1234 -pbkdf2 -e -base64 -A -S 0000000000000000 -iter 4096 -md sha1 -p -iv 00000000000000000000000000000000)
-	// echo $(echo "a48yuBSSLSIXLKtxO0eAj5mujzIpgG4TcKc21Qtnwws=" | openssl enc -aes-256-cbc -k 1234 -pbkdf2 -d -base64 -A -salt -iter 4096 )
-	// go build; echo $(./enka -key 1234 -text abcd)
-	//echo $(echo "00000000000000000000000000000000" | openssl enc -aes-256-cbc -K 0000000000000000000000000000000000000000000000000000000000000000 -pbkdf2 -e -base64 -A -S 00000000 -iter 4096 -md sha1 -p -iv 00000000000000000000000000000000)
-}
-
-// pkcs7strip remove pkcs7 padding
-func pkcs7strip(data []byte, blockSize int) ([]byte, error) {
-	length := len(data)
-	if length == 0 {
-		return nil, errors.New("pkcs7: Data is empty")
-	}
-	if length%blockSize != 0 {
-		return nil, errors.New("pkcs7: Data is not block-aligned")
-	}
-	padLen := int(data[length-1])
-	ref := bytes.Repeat([]byte{byte(padLen)}, padLen)
-	if padLen > blockSize || padLen == 0 || !bytes.HasSuffix(data, ref) {
-		return nil, errors.New("pkcs7: Invalid padding")
-	}
-	return data[:length-padLen], nil
-}
-
-// pkcs7pad add pkcs7 padding
-func pkcs7pad(data []byte, blockSize int) ([]byte, error) {
-	if blockSize <= 1 || blockSize >= 256 {
-		return nil, fmt.Errorf("pkcs7: Invalid block size %d", blockSize)
-	} else {
-		padLen := blockSize - len(data)%blockSize
-		padding := bytes.Repeat([]byte{byte(padLen)}, padLen)
-		return append(data, padding...), nil
-	}
 }
 
 func keylengthForAlgo(algo string) int {

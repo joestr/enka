@@ -1,6 +1,7 @@
 package main
 
 import (
+	"enka/enka_decryption"
 	"enka/enka_encryption"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 
 var commands = map[string]func([]string, *log.Logger, *log.Logger){
 	"encrypt": enka_encryption.Encrypt,
+	"decrypt": enka_decryption.Decrypt,
 }
 
 var help bool
@@ -36,7 +38,7 @@ func main() {
 }
 
 func globalUsage(executable string) {
-	fmt.Printf("Usage: %s [ --verbose ] encrypt [ --algo ] [ --kdf ] [ --key ] [ --salt ] [ --text ] [ --verbose ]\n", executable)
+	fmt.Printf("Usage: %s [ --help ] encrypt [ --algo ] [ --kdf ] [ --key ] [ --salt ] [ --text ] [ --verbose ] | decrypt [ --key ] [ --string ]\n", executable)
 }
 
 func globalHelp() {
