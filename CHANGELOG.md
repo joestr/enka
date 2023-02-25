@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - basic command line interface
-- encrypt via _encrypt_ subcommand
-- decrypt via _decrypt_ subcommand
+- encrypt via `encrypt` subcommand
+- decrypt via `decrypt` subcommand
+- test encryption and decryption
 
 [Unreleased]: https://github.com/joestr/enka/compare/87ea2ab7...HEAD
