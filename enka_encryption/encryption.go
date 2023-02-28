@@ -79,6 +79,7 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	}
 
 	var derivativeKey []byte
+
 	if isPbkdf2Used {
 		derivativeKey = pbkdf2.Key(encryptionKeyBytes, encryptionKeySaltBytes, pbkdf2IterationCount, keylengthForAlgo(encryptionAlgorithm), pbkdf2kdfHashFunction)
 	}
@@ -99,7 +100,7 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 
 	var plainBytes []byte
 	var cipherBytes []byte
-	var initalizationVector []byte
+	var initializationVector []byte
 
 	if isAes256CbcUsed {
 		block, cipherError := aes.NewCipher(derivativeKey)
@@ -112,20 +113,20 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 
 		cipherBytes = make([]byte, len(plainBytes))
 
-		initalizationVector = make([]byte, aes.BlockSize)
-		if _, ivError := io.ReadFull(rand.Reader, initalizationVector); ivError != nil {
+		initializationVector = make([]byte, aes.BlockSize)
+		if _, ivError := io.ReadFull(rand.Reader, initializationVector); ivError != nil {
 			panic(ivError)
 		}
 
 		if verbose {
-			outLog.Println(fmt.Sprintf("iv=%s", hex.EncodeToString(initalizationVector)))
+			outLog.Println(fmt.Sprintf("iv=%s", hex.EncodeToString(initializationVector)))
 		}
 
-		mode := cipher.NewCBCEncrypter(block, initalizationVector)
+		mode := cipher.NewCBCEncrypter(block, initializationVector)
 		mode.CryptBlocks(cipherBytes, plainBytes)
 	}
 
-	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s\n", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initalizationVector), base64.StdEncoding.EncodeToString(cipherBytes))
+	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s\n", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initializationVector), base64.StdEncoding.EncodeToString(cipherBytes))
 }
 
 func keylengthForAlgo(algo string) int {

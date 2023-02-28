@@ -32,7 +32,7 @@ var verbose bool
 
 func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	fs := flag.NewFlagSet("decrypt", flag.ExitOnError)
-	fs.StringVar(&enkaString, "string", "", "The 'enka' to parse and decrypt")
+	fs.StringVar(&enkaString, "string", "", "The 'enka' string to parse and decrypt")
 	fs.StringVar(&encryptionKey, "key", "", "The decryption key")
 	fs.BoolVar(&verbose, "verbose", false, "Set verbosity on")
 	err := fs.Parse(args)
@@ -62,7 +62,7 @@ func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	var encryptionAlgorithm = splittedEnkaString[3]
 	var keyDerivationFunction = splittedEnkaString[4]
 	var encryptionKeySaltBytes, _ = base64.RawStdEncoding.DecodeString(strings.Replace(splittedEnkaString[5], "=", "", -1))
-	var initalizationVector, _ = base64.RawStdEncoding.DecodeString(strings.Replace(splittedEnkaString[6], "=", "", -1))
+	var initializationVector, _ = base64.RawStdEncoding.DecodeString(strings.Replace(splittedEnkaString[6], "=", "", -1))
 	var cipherBytes, _ = base64.RawStdEncoding.DecodeString(strings.Replace(splittedEnkaString[7], "=", "", -1))
 
 	if !isSupportedAlgo(encryptionAlgorithm) {
@@ -83,8 +83,9 @@ func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	}
 
 	var derivativeKey []byte
+
 	if isPbkdf2Used {
-		derivativeKey = pbkdf2.Key(encryptionKeyBytes, encryptionKeySaltBytes, pbkdf2IterationCount, keylengthForAlgo(encryptionAlgorithm), pbkdf2kdfHashFunction)
+		derivativeKey = pbkdf2.Key(encryptionKeyBytes, encryptionKeySaltBytes, pbkdf2IterationCount, keyLengthForAlgo(encryptionAlgorithm), pbkdf2kdfHashFunction)
 	}
 
 	if verbose {
@@ -112,7 +113,7 @@ func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 
 		plainBytes = make([]byte, len(cipherBytes))
 
-		mode := cipher.NewCBCDecrypter(block, initalizationVector)
+		mode := cipher.NewCBCDecrypter(block, initializationVector)
 		mode.CryptBlocks(plainBytes, cipherBytes[0:len(cipherBytes)])
 
 		plainBytes, _ = pkcs7.Pkcs7strip(plainBytes, aes.BlockSize)
@@ -123,7 +124,7 @@ func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	fmt.Printf("%s\n", plainText)
 }
 
-func keylengthForAlgo(algo string) int {
+func keyLengthForAlgo(algo string) int {
 	switch algo {
 	case "aes256cbc":
 		return 32
