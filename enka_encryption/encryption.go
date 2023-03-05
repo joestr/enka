@@ -52,6 +52,14 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 		errorLog.Fatalln(fmt.Sprintf("The specified algorithm \"%s\" is not supported", encryptionAlgorithm))
 	}
 
+	if encryptionKey == "" {
+		errorLog.Fatalln("Encryption key cannot be empty")
+	}
+
+	if plainText == "" {
+		errorLog.Fatalln("Text cannot be empty")
+	}
+
 	var isPbkdf2Used = false
 	var pbkdf2IterationCount int
 	var pbkdf2kdfHashFunction func() hash.Hash

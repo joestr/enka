@@ -46,7 +46,7 @@ func main() {
 }
 
 func globalUsage(executable string) {
-	fmt.Printf("Usage: %s [ --help ] encrypt [ --algo ] [ --kdf ] [ --key ] [ --salt ] [ --text ] [ --verbose ] | decrypt [ --key ] [ --string ]\n", executable)
+	fmt.Printf("Usage: %s [ --help ] encrypt [ --algo ] [ --kdf ] < --key > [ --salt ] < --text > [ --verbose ] | decrypt < --key > < --string >\n", executable)
 }
 
 func globalHelp() {

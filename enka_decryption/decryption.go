@@ -54,6 +54,10 @@ func Decrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 		errorLog.Fatalln("This version of an 'enka' string is not supported")
 	}
 
+	if encryptionKey == "" {
+		errorLog.Fatalln("Decryption key cannot be empty")
+	}
+
 	if len(splittedEnkaString[3:]) != 5 {
 		errorLog.Fatalln(fmt.Sprintf("Five sections are required; got %s", len(splittedEnkaString[2:])))
 	}
