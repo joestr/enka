@@ -11,7 +11,7 @@ OpenSSL does not include such information in its output. So a solution is needed
 _enka_ steps in and provided a solution.
 
 ```
-$ ./enka encrypt --algo aes256cbc -kdf pbkdf2:650000:sha256 --text kasnudelisbesseralswienerschnitzel --key obaehrlich
+$ ./enka encrypt --algo aes256cbc --kdf pbkdf2:650000:sha256 --text kasnudelisbesseralswienerschnitzel --key obaehrlich
 %enka%v1%aes256cbc%pbkdf2:650000:sha256%DH3Z4u0DeLk=%RoTCnO59r8pe2PeJDJoh1Q==%sWyo2KkRVk4PfgWAx/OeYb46SeDXwn/pUhOn2/6rAKXBr/w233cfavspr0GThMXP
 $ 
 ```
