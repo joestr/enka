@@ -20,6 +20,7 @@ import (
 	"enka/pkcs7"
 	"flag"
 	"fmt"
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
 	"hash"
 	"io"
@@ -63,12 +64,19 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	var isPbkdf2Used = false
 	var pbkdf2IterationCount int
 	var pbkdf2kdfHashFunction func() hash.Hash
+	var isArgon2IdUsed = false
+	var argon2IdTime int
+	var argon2IdMemory int
+	var argon2IdThreads int
 
 	switch resolveKdfType(keyDerivationFunction) {
 	case "pbkdf2":
 		isPbkdf2Used = true
 		pbkdf2IterationCount, pbkdf2kdfHashFunction = parsePbkdf2(keyDerivationFunction)
 		break
+	case "argon2id":
+		isArgon2IdUsed = true
+		argon2IdTime, argon2IdMemory, argon2IdThreads = parseArgon2Id(keyDerivationFunction)
 	default:
 		errorLog.Fatalln(fmt.Sprintf("The specified KDF \"%s\" is not supported", keyDerivationFunction))
 	}
@@ -90,6 +98,8 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 
 	if isPbkdf2Used {
 		derivativeKey = pbkdf2.Key(encryptionKeyBytes, encryptionKeySaltBytes, pbkdf2IterationCount, keylengthForAlgo(encryptionAlgorithm), pbkdf2kdfHashFunction)
+	} else if isArgon2IdUsed {
+		derivativeKey = argon2.IDKey(encryptionKeyBytes, encryptionKeySaltBytes, uint32(argon2IdTime), uint32(argon2IdMemory), uint8(argon2IdThreads), uint32(keylengthForAlgo(encryptionAlgorithm)))
 	}
 
 	if verbose {
@@ -99,18 +109,25 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	}
 
 	var isAes256CbcUsed = false
+	var isAes192CbcUsed = false
+	var isAes128CbcUsed = false
 
 	switch resolveAlgoType(encryptionAlgorithm) {
 	case "aes256cbc":
 		isAes256CbcUsed = true
 		break
+	case "aes192cbc":
+		isAes192CbcUsed = true
+		break
+	case "aes128cbc":
+		isAes128CbcUsed = true
 	}
 
 	var plainBytes []byte
 	var cipherBytes []byte
 	var initializationVector []byte
 
-	if isAes256CbcUsed {
+	if isAes256CbcUsed || isAes192CbcUsed || isAes128CbcUsed {
 		block, cipherError := aes.NewCipher(derivativeKey)
 		if cipherError != nil {
 			panic(cipherError)
@@ -142,6 +159,12 @@ func keylengthForAlgo(algo string) int {
 	case "aes256cbc":
 		return 32
 		break
+	case "aes192cbc":
+		return 24
+		break
+	case "aes128cbc":
+		return 16
+		break
 	}
 
 	return 32
@@ -150,6 +173,12 @@ func keylengthForAlgo(algo string) int {
 func isSupportedAlgo(algo string) bool {
 	switch algo {
 	case "aes256cbc":
+		return true
+		break
+	case "aes192cbc":
+		return true
+		break
+	case "aes128cbc":
 		return true
 		break
 	}
@@ -162,6 +191,12 @@ func resolveAlgoType(algo string) string {
 	case "aes256cbc":
 		return "aes256cbc"
 		break
+	case "aes192cbc":
+		return "aes192cbc"
+		break
+	case "aes128cbc":
+		return "aes128cbc"
+		break
 	}
 
 	return ""
@@ -170,6 +205,8 @@ func resolveAlgoType(algo string) string {
 func resolveKdfType(kdf string) string {
 	if strings.HasPrefix(kdf, "pbkdf2") {
 		return "pbkdf2"
+	} else if strings.HasPrefix(kdf, "argon2id") {
+		return "argon2id"
 	}
 
 	return ""
@@ -206,4 +243,18 @@ func parsePbkdf2(kdf string) (int, func() hash.Hash) {
 	}
 
 	return iterCount, hashFunction
+}
+
+func parseArgon2Id(kdf string) (int, int, int) {
+	var params = strings.Split(kdf, ":")
+
+	if len(params) != 4 {
+		panic("The amount of arguments for Argon2id are invalid")
+	}
+
+	var time, _ = strconv.Atoi(params[1])
+	var memory, _ = strconv.Atoi(params[2])
+	var threads, _ = strconv.Atoi(params[3])
+
+	return time, memory, threads
 }
