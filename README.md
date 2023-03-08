@@ -1,5 +1,5 @@
 # enka
-_Enkapsulate_ tour date!
+_Enkapsulate_ your date!
 
 _enka_ is a tool to encrypt strings to a format, which can be decrypted by other tools programs too.
 
@@ -33,7 +33,7 @@ kasnudelisbesseralswienerschnitzel
 $ 
 ```
 
-But using the _enka_ you can get to your result more quickly:
+But using the _enka_ tool you can get to your result more quickly:
 ```
 $ echo $(./enka decrypt --string %enka%v1%aes256cbc%pbkdf2:650000:sha256%DH3Z4u0DeLk=%RoTCnO59r8pe2PeJDJoh1Q==%sWyo2KkRVk4PfgWAx/OeYb46SeDXwn/pUhOn2/6rAKXBr/w233cfavspr0GThMXP --key obaehrlich)
 kasnudelisbesseralswienerschnitzel
