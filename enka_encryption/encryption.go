@@ -20,6 +20,7 @@ import (
 	"enka/pkcs7"
 	"flag"
 	"fmt"
+	"github.com/enceve/crypto/camellia"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/pbkdf2"
 	"hash"
@@ -111,6 +112,9 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 	var isAes256CbcUsed = false
 	var isAes192CbcUsed = false
 	var isAes128CbcUsed = false
+	var isCamellia128Used = false
+	var isCamellia192Used = false
+	var isCamellia256Used = false
 
 	switch resolveAlgoType(encryptionAlgorithm) {
 	case "aes256cbc":
@@ -121,6 +125,16 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 		break
 	case "aes128cbc":
 		isAes128CbcUsed = true
+		break
+	case "camellia128":
+		isCamellia128Used = true
+		break
+	case "camellia192":
+		isCamellia192Used = true
+		break
+	case "camellia256":
+		isCamellia256Used = true
+		break
 	}
 
 	var plainBytes []byte
@@ -151,6 +165,31 @@ func Encrypt(args []string, outLog *log.Logger, errorLog *log.Logger) {
 		mode.CryptBlocks(cipherBytes, plainBytes)
 	}
 
+	if isCamellia256Used || isCamellia192Used || isCamellia128Used {
+		block, cipherError := camellia.NewCipher(derivativeKey)
+		if cipherError != nil {
+			panic(cipherError)
+		}
+
+		plainBytes = []byte(plainText)
+		plainBytes, _ = pkcs7.Pkcs7pad(plainBytes, aes.BlockSize)
+
+		cipherBytes = make([]byte, len(plainBytes))
+
+		initializationVector = make([]byte, aes.BlockSize)
+
+		if _, ivError := io.ReadFull(rand.Reader, initializationVector); ivError != nil {
+			panic(ivError)
+		}
+
+		if verbose {
+			outLog.Println(fmt.Sprintf("iv=%s", hex.EncodeToString(initializationVector)))
+		}
+
+		mode := cipher.NewCBCEncrypter(block, initializationVector)
+		mode.CryptBlocks(cipherBytes, plainBytes)
+	}
+
 	fmt.Printf("%%enka%%v1%%%s%%%s%%%s%%%s%%%s\n", encryptionAlgorithm, keyDerivationFunction, base64.StdEncoding.EncodeToString(encryptionKeySaltBytes), base64.StdEncoding.EncodeToString(initializationVector), base64.StdEncoding.EncodeToString(cipherBytes))
 }
 
@@ -163,6 +202,15 @@ func keylengthForAlgo(algo string) int {
 		return 24
 		break
 	case "aes128cbc":
+		return 16
+		break
+	case "camellia256":
+		return 32
+		break
+	case "camellia192":
+		return 24
+		break
+	case "camellia128":
 		return 16
 		break
 	}
@@ -181,6 +229,15 @@ func isSupportedAlgo(algo string) bool {
 	case "aes128cbc":
 		return true
 		break
+	case "camellia256":
+		return true
+		break
+	case "camellia192":
+		return true
+		break
+	case "camellia128":
+		return true
+		break
 	}
 
 	return false
@@ -196,6 +253,15 @@ func resolveAlgoType(algo string) string {
 		break
 	case "aes128cbc":
 		return "aes128cbc"
+		break
+	case "camellia256":
+		return "camellia256"
+		break
+	case "camellia192":
+		return "camellia192"
+		break
+	case "camellia128":
+		return "camellia128"
 		break
 	}
 

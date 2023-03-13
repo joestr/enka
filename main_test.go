@@ -43,3 +43,13 @@ func TestAes128CbcPbkdf2Iter20Sha512256Decryption(t *testing.T) {
 	args := []string{"--string", "%enka%v1%aes128cbc%pbkdf2:20:sha512/256%13RKiPraGzc=%acl2D57zwrHrMm7xb72ZZg==%XYT8Dt8WedI9ZpBE51l0MA==", "--key", "1234"}
 	enka_decryption.Decrypt(args, nil, nil)
 }
+
+func TestCamellia128Pbkdf2Iter20Sha512256Encryption(t *testing.T) {
+	args := []string{"--algo", "camellia128", "--kdf", "pbkdf2:20:sha512/256", "--key", "1234", "--text", "abcd"}
+	enka_encryption.Encrypt(args, nil, nil)
+}
+
+func TestCamellia128Pbkdf2Iter20Sha512256Decryption(t *testing.T) {
+	args := []string{"--string", "%enka%v1%camellia128%pbkdf2:20:sha512/256%GP0ocCWcyZ8=%FvaDgjC721byH3EEGBBk8Q==%gnL9Ssd8JWObUppVnhmATA==", "--key", "1234"}
+	enka_decryption.Decrypt(args, nil, nil)
+}
