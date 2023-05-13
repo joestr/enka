@@ -1,14 +1,14 @@
 # enka
 _Enkapsulate_ your date!
 
-_enka_ is a tool to encrypt strings to a format, which can be decrypted by other tools programs too.
+_enka_ is a tool to encrypt strings to a format, which can be decrypted by other tools and programs too.
 
 ## The problem
 Encrypting data requires knowledge of certain parameters like the encryption algorithm etc.
 OpenSSL does not include such information in its output. So a solution is needed.
 
 ## The solution
-_enka_ steps in and provided a solution.
+_enka_ steps in and provides a solution.
 
 ```
 $ ./enka encrypt --algo aes256cbc --kdf pbkdf2:650000:sha256 --text kasnudelisbesseralswienerschnitzel --key obaehrlich
@@ -33,7 +33,7 @@ kasnudelisbesseralswienerschnitzel
 $ 
 ```
 
-But using the _enka_ tool you can get to your result more quickly:
+But using the _enka_ tool you can get your result more quickly:
 ```
 $ echo $(./enka decrypt --string %enka%v1%aes256cbc%pbkdf2:650000:sha256%DH3Z4u0DeLk=%RoTCnO59r8pe2PeJDJoh1Q==%sWyo2KkRVk4PfgWAx/OeYb46SeDXwn/pUhOn2/6rAKXBr/w233cfavspr0GThMXP --key obaehrlich)
 kasnudelisbesseralswienerschnitzel
